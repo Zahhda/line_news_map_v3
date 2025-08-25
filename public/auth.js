@@ -55,46 +55,51 @@ async function fetchMe() {
 }
 
 function ensureModal() {
-  if (document.getElementById('authModal')) return;
+  let modal = document.getElementById('authModal');
+  if (!modal) {
+    const created = document.createElement('div');
+    created.id = 'authModal';
+    created.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);align-items:center;justify-content:center;z-index:60';
+    created.setAttribute('aria-hidden', 'true');
 
-  const modal = document.createElement('div');
-  modal.id = 'authModal';
-  modal.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);align-items:center;justify-content:center;z-index:60';
-  modal.setAttribute('aria-hidden', 'true');
+    created.innerHTML = `
+      <div id="authDialog" role="dialog" aria-modal="true" aria-labelledby="authTabs"
+           style="background:#0b0b0b;border:1px solid #333;border-radius:12px;width:420px;max-width:90vw;box-shadow:0 10px 30px rgba(0,0,0,.5)">
+        <div id="authTabs" style="display:flex;border-bottom:1px solid #222;align-items:center">
+          <button class="tabBtn" data-tab="login" style="flex:1;padding:10px;background:#111;border:0;color:#ddd;cursor:pointer">Login</button>
+          <button class="tabBtn" data-tab="signup" style="flex:1;padding:10px;background:#0b0b0b;border:0;color:#aaa;cursor:pointer">Sign up</button>
+          <button id="closeAuth" type="button" aria-label="Close"
+                  style="padding:10px;border:0;background:transparent;color:#999;font-size:18px;cursor:pointer">✕</button>
+        </div>
+        <div id="authBody" style="padding:16px"></div>
+      </div>`;
+    document.body.appendChild(created);
+    modal = created;
+  }
 
-  modal.innerHTML = `
-    <div id="authDialog" role="dialog" aria-modal="true" aria-labelledby="authTabs"
-         style="background:#0b0b0b;border:1px solid #333;border-radius:12px;width:420px;max-width:90vw;box-shadow:0 10px 30px rgba(0,0,0,.5)">
-      <div id="authTabs" style="display:flex;border-bottom:1px solid #222;align-items:center">
-        <button class="tabBtn" data-tab="login" style="flex:1;padding:10px;background:#111;border:0;color:#ddd;cursor:pointer">Login</button>
-        <button class="tabBtn" data-tab="signup" style="flex:1;padding:10px;background:#0b0b0b;border:0;color:#aaa;cursor:pointer">Sign up</button>
-        <button id="closeAuth" type="button" aria-label="Close"
-                style="padding:10px;border:0;background:transparent;color:#999;font-size:18px;cursor:pointer">✕</button>
-      </div>
-      <div id="authBody" style="padding:16px"></div>
-    </div>`;
+  // ✅ Always bind close handlers (even if modal pre-exists in HTML)
+  const closeBtn = modal.querySelector('#closeAuth');
+  if (closeBtn && !closeBtn._bound) {
+    closeBtn.addEventListener('click', closeModal);
+    closeBtn._bound = true;
+  }
 
-  document.body.appendChild(modal);
+  if (!modal._backdropBound) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+    modal._backdropBound = true;
+  }
 
-  // Close handlers (X, ESC, backdrop)
-  const closeBtn = document.getElementById('closeAuth');
-  closeBtn.addEventListener('click', closeModal);
-
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal) closeModal(); // backdrop click closes
-  });
-
-  document.addEventListener('keydown', onEscClose);
-
-  // Cleanup on unload just in case
-  window.addEventListener('unload', () => {
-    document.removeEventListener('keydown', onEscClose);
-  });
-
-  function onEscClose(e) {
-    if (e.key === 'Escape' && modal.style.display === 'flex') {
-      closeModal();
-    }
+  if (!modal._escBound) {
+    const onEscClose = (e) => {
+      if (e.key === 'Escape' && modal.style.display === 'flex') closeModal();
+    };
+    document.addEventListener('keydown', onEscClose);
+    window.addEventListener('unload', () => {
+      document.removeEventListener('keydown', onEscClose);
+    });
+    modal._escBound = true;
   }
 }
 
