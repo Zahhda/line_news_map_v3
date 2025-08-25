@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>My Account • Live News Map</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="topbar">
+    <a href="/" class="logo" style="text-decoration:none;color:inherit;font-weight:700">Live News Map</a>
+    <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+      <a href="/" class="btn">Back to Home</a>
+      <a id="adminBtn" href="/admin" class="btn">Admin</a>
+      <button id="logoutBtn" class="btn">Logout</button>
+    </div>
+  </div>
+
+  <main style="max-width:780px;margin:40px auto;padding:16px">
+    <h1 style="font-size:22px;margin-bottom:12px">My Account</h1>
+    <div id="status" style="margin-bottom:16px;color:#aaa">Loading…</div>
+
+    <div id="card" class="card" style="padding:16px;border:1px solid #333;border-radius:12px;margin-bottom:20px">
+      <div style="display:grid;grid-template-columns:140px 1fr;gap:12px;align-items:center">
+        <div style="font-weight:600;color:#999">Name</div>
+        <div id="name">—</div>
+
+        <div style="font-weight:600;color:#999">Email</div>
+        <div id="email">—</div>
+
+        <div style="font-weight:600;color:#999">Phone</div>
+        <div id="phone">—</div>
+
+        <div style="font-weight:600;color:#999">Role</div>
+        <div id="role">—</div>
+
+        <div style="font-weight:600;color:#999">Joined</div>
+        <div id="joined">—</div>
+      </div>
+    </div>
+
+    <!-- Read later section -->
+    <section class="saved-news">
+  <h2>Read later</h2>
+  <div id="savedNewsBox" class="saved-grid"></div>
+</section>
+
+  </main>
+
+  <script src="/account.js"></script>
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+  <title>Live News Map</title>
+  <link href="/styles.css" rel="stylesheet" />
+
+  <!-- 🔹 Favicon -->
+  <link rel="icon" type="image/png" href="/img/favicon.png" />
+  <!-- Optional: Apple touch icon (for iOS home screen) -->
+  <link rel="apple-touch-icon" href="/img/favicon.png" />
+</head>
+
+  <body>
+    <!-- Top controls -->
+    <div class="topbar">
+      <div id="topbar-left"
+        style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+
+        <!-- 🔹 Logo -->
+        <a href="/" style="display:flex;align-items:center;gap:6px;text-decoration:none;color:inherit;font-weight:700">
+          <img src="/img/logo.png" alt="Live News Map" style="height:32px;width:auto;border-radius:6px" />
+          <span style="font-size:16px;">Live News Map</span>
+        </a>
+
+        <!-- Country / Region controls -->
+        <select id="countrySelect"></select>
+        <select id="regionSelect"></select>
+        <button id="refreshBtn" title="Refresh current region">Refresh</button>
+        <button class="primary" id="translateBtn" title="Translate headlines to English">
+          Translate to English
+        </button>
+
+        <!-- Dominant badge -->
+        <span class="token-badge" id="dominantBadge"
+          style="display:inline-flex;align-items:center;justify-content:center;
+                 width:60px;height:24px;padding:0;background:#111;
+                 border:1px solid var(--border);border-radius:8px;
+                 color:var(--muted);font-size:12px;white-space:nowrap;
+                 overflow:hidden;text-overflow:ellipsis;"
+          title="Dominant news category for region">—</span>
+
+        <!-- 3-light severity signal bar -->
+        <div aria-label="Severity signal" class="signalbar"
+          id="severitySignalBar" role="group">
+          <span class="light red" title="Red: war/climate"></span>
+          <span class="light yellow" title="Yellow: culture/society"></span>
+          <span class="light green" title="Green: other"></span>
+        </div>
+      </div>
+
+      <!-- Right auth area -->
+      <div id="authArea" style="margin-left:auto;display:flex;gap:8px;align-items:center"></div>
+    </div>
+
+    <!-- Main layout -->
+    <div class="layout">
+      <div id="map"></div>
+      <div class="sidebar">
+        <div class="section-title">Latest News</div>
+        <div id="newsList"></div>
+      </div>
+    </div>
+
+    <script src="/app.js" type="module"></script>
+
+    <!-- Auth modal -->
+    <div id="authModal"
+      style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);
+             align-items:center;justify-content:center;z-index:60">
+      <div style="background:#0b0b0b;border:1px solid #333;border-radius:12px;
+                  width:420px;max-width:90vw">
+        <div style="display:flex;border-bottom:1px solid #222">
+          <button class="tabBtn" data-tab="login"
+            style="flex:1;padding:10px;background:#111;border:0;color:#ddd;cursor:pointer">Login</button>
+          <button class="tabBtn" data-tab="signup"
+            style="flex:1;padding:10px;background:#0b0b0b;border:0;color:#aaa;cursor:pointer">Sign up</button>
+          <button id="closeAuth"
+            style="padding:10px;border:0;background:transparent;color:#999;font-size:18px">✕</button>
+        </div>
+        <div id="authBody" style="padding:16px"></div>
+      </div>
+    </div>
+
+    <script src="/auth.js"></script>
+  </body>
+</html>

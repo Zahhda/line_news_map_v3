@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin • Live News Map</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <!-- Top bar -->
+  <div class="topbar">
+    <span style="font-weight:600">Admin Panel</span>
+
+    <div id="adminTabs" style="display:inline-flex;gap:8px;margin-left:16px;">
+      <a href="/admin" data-tab="regions" style="text-decoration:none;background:#111;border:1px solid var(--border);padding:8px 10px;border-radius:10px;color:inherit">Regions</a>
+      <a href="/admin/users" data-tab="users" style="text-decoration:none;background:#0b0b0b;border:1px solid var(--border);padding:8px 10px;border-radius:10px;color:var(--muted)">Users</a>
+    </div>
+
+    <!-- Token gate -->
+    <input id="tokenInput" type="text" placeholder="Enter admin token"
+           style="width:260px;" />
+    <button id="saveTokenBtn" class="primary">Use Token</button>
+
+    <!-- Status capsule (will turn green when verified) -->
+    <span id="tokenStatus"
+          class="token-badge"
+          style="display:inline-flex; align-items:center; gap:6px;">
+      Not verified
+    </span>
+
+    <a href="/" style="margin-left:auto;color:#fff;text-decoration:none;">← Back</a>
+  </div>
+
+  <!-- Gate hint (shown until verified) -->
+  <div id="gateNotice"
+       style="padding:14px; border-bottom:1px dashed var(--border); color:var(--muted);">
+    Enter a valid admin token to unlock the admin interface.
+  </div>
+
+  <!-- Main two-column layout: 30% editor (left), 70% list (right) -->
+  <!-- Hidden by default; shown after token verification -->
+  <div id="adminLayout"
+       style="display:none; gap:12px; padding:12px; align-items:flex-start;">
+
+    <!-- LEFT: Create / Edit Region (30%) -->
+    <div style="flex:0 0 30%; border:1px solid var(--border); border-radius:12px;
+                padding:12px; background:#0f0f0f;">
+      <h3 style="margin:0 0 10px 0;">Create / Edit Region</h3>
+
+      <form id="regionForm">
+        <input type="hidden" id="regionId" />
+
+        <div style="display:grid; grid-template-columns:1fr; gap:8px;">
+          <label style="font-size:12px; color:var(--muted);">Name</label>
+          <input style="padding: 6px!important;" id="name" placeholder="Region name" required />
+
+          <label style="font-size:12px; color:var(--muted);">Country</label>
+          <input style="padding: 6px!important;" id="country" placeholder="Country (e.g., Ukraine)" required />
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <div>
+              <label style="font-size:12px; color:var(--muted);">Latitude</label>
+              <input style="padding: 6px!important;" id="lat" type="number" step="any" placeholder="e.g., 50.45" required />
+            </div>
+            <div>
+              <label style="font-size:12px; color:var(--muted);">Longitude</label>
+              <input style="padding: 6px!important;" id="lng" type="number" step="any" placeholder="e.g., 30.52" required />
+            </div>
+          </div>
+        </div>
+
+        <div class="section-title" style="margin-top:12px;">Feeds</div>
+        <div id="feedsWrap"></div>
+        <button type="button" id="addFeedBtn" style="margin:6px 0;">+ Add Feed</button>
+
+        <div style="display:flex; gap:8px; margin-top:10px;">
+          <button class="primary" type="submit">Save Region</button>
+          <button type="button" id="resetBtn">Reset</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- RIGHT: Regions (70%) -->
+    <div style="flex:1; border:1px solid var(--border); border-radius:12px;
+                padding:12px; background:#0f0f0f;">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+        <h3 style="margin:0;">Regions</h3>
+        <div style="margin-left:auto; display:flex; align-items:center; gap:8px;">
+          <span class="small" style="color:var(--muted);">Filter by country:</span>
+          <select id="countryFilter" style="min-width:180px;">
+            <option value="__ALL__">All countries</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="regionsList"></div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast"
+       style="position:fixed; right:16px; bottom:16px; padding:10px 14px;
+              background:#111; border:1px solid var(--border); border-left:4px solid var(--accent);
+              color:var(--text); border-radius:10px; box-shadow:0 6px 20px rgba(0,0,0,.35);
+              font-size:14px; opacity:0; pointer-events:none; transition:opacity .2s ease, transform .2s ease;
+              transform:translateY(8px); z-index:9999;"></div>
+
+  <script src="/admin.js" type="module"></script>
+<script>document.querySelector('#adminTabs a[data-tab="regions"]').style.background='#111';document.querySelector('#adminTabs a[data-tab="regions"]').style.color='inherit';</script>
+</body>
+</html>
