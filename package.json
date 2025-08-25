@@ -1,11 +1,15 @@
 {
   "name": "live-news-map",
   "version": "1.1.0",
+  "private": true,
   "type": "module",
   "description": "Live News Map with admin, translate-to-English, icons by category, and fast feed caching",
+  "engines": {
+    "node": ">=18 <23"
+  },
   "scripts": {
     "dev": "node server.js",
-    "start": "NODE_ENV=production node server.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "@vitalets/google-translate-api": "^9.2.1",
