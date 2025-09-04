@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+  <title>Live News Map</title>
+  <link href="/styles.css" rel="stylesheet" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/img/favicon.png" />
+  <link rel="apple-touch-icon" href="/img/favicon.png" />
+
+  <!-- ==== MOBILE-ONLY LAYOUT; DESKTOP UNTOUCHED ==== -->
+  <style>
+    :root{
+      --bg:#0b0b0b; --panel:#111; --text:#e8e8e8;
+      --muted:#aaa; --border:#2c2c2c;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif}
+    .icon-btn{display:inline-flex;align-items:center;justify-content:center;padding:8px 10px;border:1px solid var(--border);background:#151515;color:var(--text);border-radius:8px;cursor:pointer}
+
+    /* keep your existing light/badge look */
+    .signalbar{display:inline-flex;align-items:center;gap:6px}
+    .signalbar .light{width:10px;height:10px;border-radius:999px;border:1px solid #0008;box-shadow:0 0 0 1px #0006 inset,0 0 8px #0004}
+    .signalbar .red{background:#ff4d4d}
+    .signalbar .yellow{background:#f0d24a}
+    .signalbar .green{background:#44d27c}
+    .token-badge#dominantBadge{
+      display:inline-flex;align-items:center;justify-content:center;min-width:60px;height:24px;padding:0 8px;
+      background:#101010;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    }
+
+    /* Hidden by default; we create it via JS and show only on mobile */
+    #showMapBtn{display:none}
+
+    /* ======= MOBILE ONLY (<=640px) ======= */
+    @media (max-width:640px){
+      /* Make the whole topbar a grid with 3 columns:
+         col1 = flexible left, col2 = compact middle, col3 = compact right */
+      .topbar{
+        position:sticky; top:0; z-index:50;
+        background:var(--panel); border-bottom:1px solid var(--border);
+        display:grid; grid-template-columns: 1fr auto auto;
+        grid-auto-rows:auto; grid-column-gap:8px; grid-row-gap:8px;
+        align-items:center; padding:8px 10px;
+      }
+
+      /* Let the children of #topbar-left participate directly in .topbar grid
+         (so we DO NOT change your HTML; no ID moves; desktop unaffected) */
+      #topbar-left{ display:contents !important; }
+
+      /* Row 1: Logo (left), Translate (middle), Auth (right) */
+      #topbar-left > a[href="/"]{ grid-column:1; grid-row:1; display:flex !important; align-items:center; gap:6px; text-decoration:none; color:inherit; font-weight:700; }
+      #topbar-left > a[href="/"] img{ height:28px; width:auto; border-radius:6px }
+      #topbar-left > a[href="/"] span{ font-size:15px }
+
+      /* #translateBtn{ grid-column:2; grid-row:1; justify-self:end; padding:8px 10px; border:1px solid var(--border); background:#1a1a1a; color:var(--text); border-radius:8px } */
+
+      /* authArea is a SIBLING of #topbar-left (already inside .topbar), so place it in row1 col3 */
+      .topbar > #authArea{ grid-column:3; grid-row:1; display:flex; gap:8px; align-items:center; margin-left:0 !important; justify-self:end; }
+
+      /* Row 2: Country (col1), Region (col2), Refresh (col3) */
+      #countrySelect{ grid-column:1; grid-row:2; min-width:0 }
+      #regionSelect{  grid-column:2; grid-row:2; min-width:0 }
+      #refreshBtn{    grid-column:3; grid-row:2; justify-self:end; display:inline-flex; align-items:center; gap:6px; padding:8px 10px; border:1px solid var(--border); background:#151515; border-radius:8px; color:var(--text) }
+      #refreshBtn .txt{ display:none } /* if you add .txt span, hide it on mobile */
+
+      /* Row 3: Severity (col1-2), Dominant (col3) */
+      #severitySignalBar{ grid-column:1 / span 2; grid-row:3; align-self:center }
+      #dominantBadge{     grid-column:3; grid-row:3; justify-self:end; align-self:center }
+
+      /* Row 4: Show Map (full width) */
+      #showMapBtn{ grid-column:1 / -1; grid-row:4; display:block; width:100% }
+
+      /* Content: single column, map hidden until shown; news fills screen */
+      .layout{ display:block }
+      #map{ display:none; border:0; min-height:40vh }
+      .sidebar{ padding:0; margin:0 }
+      .section-title{ padding:10px; border-bottom:1px solid var(--border) }
+      #newsList{ padding:10px }
+      body{ overflow-x:hidden }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- ===== Desktop markup kept EXACTLY as your original ===== -->
+  <div class="topbar">
+    <div id="topbar-left"
+      style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+
+      <!-- 🔹 Logo -->
+      <a href="/" style="display:flex;align-items:center;gap:6px;text-decoration:none;color:inherit;font-weight:700">
+        <img src="/img/logo.png" alt="Live News Map" style="height:32px;width:auto;border-radius:6px" />
+        <span style="font-size:16px;">Live News Map</span>
+      </a>
+
+      <!-- Country / Region controls -->
+      <select id="countrySelect"></select>
+      <select id="regionSelect"></select>
+      <button id="refreshBtn" title="Refresh current region">Refresh</button>
+      <button class="primary" id="translateBtn" title="Translate headlines to English">
+        Translate to English
+      </button>
+
+      <!-- Dominant badge -->
+      <span class="token-badge" id="dominantBadge"
+        style="display:inline-flex;align-items:center;justify-content:center;
+               width:60px;height:24px;padding:0;background:#111;
+               border:1px solid var(--border);border-radius:8px;
+               color:var(--muted);font-size:12px;white-space:nowrap;
+               overflow:hidden;text-overflow:ellipsis;"
+        title="Dominant news category for region">—</span>
+
+      <!-- 3-light severity signal bar -->
+      <div aria-label="Severity signal" class="signalbar"
+        id="severitySignalBar" role="group">
+        <span class="light red" title="Red: war/climate"></span>
+        <span class="light yellow" title="Yellow: culture/society"></span>
+        <span class="light green" title="Green: other"></span>
+      </div>
+    </div>
+
+    <!-- Right auth area -->
+    <div id="authArea" style="margin-left:auto;display:flex;gap:8px;align-items:center"></div>
+  </div>
+
+  <!-- Main layout -->
+  <div class="layout">
+    <div id="map"></div>
+    <div class="sidebar">
+      <div class="section-title">Latest News</div>
+      <div id="newsList"></div>
+    </div>
+  </div>
+
+  <!-- Your app & auth -->
+  <script src="/app.js" type="module"></script>
+  <div id="authModal"
+    style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);
+           align-items:center;justify-content:center;z-index:60">
+    <div style="background:#0b0b0b;border:1px solid #333;border-radius:12px;
+                width:420px;max-width:90vw">
+      <div style="display:flex;border-bottom:1px solid #222">
+        <button class="tabBtn" data-tab="login"
+          style="flex:1;padding:10px;background:#111;border:0;color:#ddd;cursor:pointer">Login</button>
+        <button class="tabBtn" data-tab="signup"
+          style="flex:1;padding:10px;background:#0b0b0b;border:0;color:#aaa;cursor:pointer">Sign up</button>
+        <button id="closeAuth"
+          style="padding:10px;border:0;background:transparent;color:#999;font-size:18px">✕</button>
+      </div>
+      <div id="authBody" style="padding:16px"></div>
+    </div>
+  </div>
+  <script src="/auth.js"></script>
+
+  <!-- Tiny JS for mobile: show-map toggle + account icon fallback -->
+  <script>
+    (function(){
+      // 1) Add Show Map button (desktop styles untouched; only shown on mobile by CSS)
+      const topbarLeft = document.getElementById('topbar-left');
+      let showMapBtn = document.getElementById('showMapBtn');
+      if(!showMapBtn){
+        showMapBtn = document.createElement('button');
+        showMapBtn.id = 'showMapBtn';
+        showMapBtn.className = 'primary';
+        showMapBtn.setAttribute('aria-controls','map');
+        showMapBtn.setAttribute('aria-expanded','false');
+        showMapBtn.textContent = 'Show Map';
+        topbarLeft.appendChild(showMapBtn);
+      }
+
+      // 2) Toggle map visibility on mobile
+      const mapEl = document.getElementById('map');
+      const regionSelect = document.getElementById('regionSelect');
+      const isMobile = () => window.matchMedia('(max-width: 640px)').matches;
+
+      function setMapExpanded(expanded){
+        if (expanded){
+          mapEl.style.display = 'block';
+          showMapBtn.setAttribute('aria-expanded','true');
+          showMapBtn.textContent = 'Hide Map';
+        } else {
+          mapEl.style.display = isMobile() ? 'none' : 'block';
+          showMapBtn.setAttribute('aria-expanded','false');
+          showMapBtn.textContent = 'Show Map';
+        }
+      }
+      showMapBtn.addEventListener('click', ()=>{
+        const expanded = showMapBtn.getAttribute('aria-expanded') === 'true';
+        setMapExpanded(!expanded);
+      });
+      if (regionSelect){
+        regionSelect.addEventListener('change', ()=>{
+          if (isMobile()){ setMapExpanded(false); }
+        });
+      }
+      // initialize based on current viewport
+      function sync(){ setMapExpanded(false); if(!isMobile()){ mapEl.style.display='block'; showMapBtn.style.display='none'; } }
+      window.addEventListener('resize', sync);
+      sync();
+
+      // 3) Ensure an account icon exists on mobile (fallback if auth.js renders text)
+      const authArea = document.getElementById('authArea');
+      if (authArea && !authArea.querySelector('#accountBtn')){
+        const btn = document.createElement('button');
+        btn.id = 'accountBtn';
+        btn.className = 'icon-btn';
+        btn.setAttribute('aria-label','Account');
+        btn.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5C21 16.5 17 14 12 14Z" fill="currentColor"/></svg>';
+        authArea.appendChild(btn);
+      }
+    })();
+  </script>
+</body>
+</html>
