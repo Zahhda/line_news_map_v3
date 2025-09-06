@@ -18,7 +18,11 @@
     }
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif}
+    body{
+      margin:0;background:var(--bg);color:var(--text);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;
+      /* NOTE: do NOT force global overflow hidden here to keep desktop untouched */
+    }
     .icon-btn{display:inline-flex;align-items:center;justify-content:center;padding:8px 10px;border:1px solid var(--border);background:#151515;color:var(--text);border-radius:8px;cursor:pointer}
 
     /* keep your existing light/badge look */
@@ -32,11 +36,20 @@
       background:#101010;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
     }
 
+    /* Helpful defaults that are safe for desktop too (they don't change visual layout) */
+    img{ max-width:100%; height:auto; display:block; }
+    select, button, input, .token-badge { max-width:100%; box-sizing:border-box; }
+    /* allow selects & other controls to be shrinkable inside flex containers */
+    .topbar > * { min-width:0; } /* topbar direct children may be flex items on desktop as before */
+
     /* Hidden by default; we create it via JS and show only on mobile */
     #showMapBtn{display:none}
 
     /* ======= MOBILE ONLY (<=640px) ======= */
     @media (max-width:640px){
+      /* Contain accidental overflow on mobile */
+      html, body { overflow-x:hidden; }
+
       /* Make the whole topbar a grid with 3 columns:
          col1 = flexible left, col2 = compact middle, col3 = compact right */
       .topbar{
@@ -45,42 +58,50 @@
         display:grid; grid-template-columns: 1fr auto auto;
         grid-auto-rows:auto; grid-column-gap:8px; grid-row-gap:8px;
         align-items:center; padding:8px 10px;
+        overflow:hidden; /* keep contents clipped to prevent horizontal scroll */
       }
 
       /* Let the children of #topbar-left participate directly in .topbar grid
          (so we DO NOT change your HTML; no ID moves; desktop unaffected) */
       #topbar-left{ display:contents !important; }
 
-      /* Row 1: Logo (left), Translate (middle), Auth (right) */
-      #topbar-left > a[href="/"]{ grid-column:1; grid-row:1; display:flex !important; align-items:center; gap:6px; text-decoration:none; color:inherit; font-weight:700; }
-      #topbar-left > a[href="/"] img{ height:28px; width:auto; border-radius:6px }
-      #topbar-left > a[href="/"] span{ font-size:15px }
+      /* force children to be shrinkable -- very important to prevent overflow */
+      #topbar-left > * , .topbar > #authArea, .topbar select, .topbar button, .token-badge {
+        min-width:0 !important;
+        max-width:100% !important;
+      }
 
-      /* #translateBtn{ grid-column:2; grid-row:1; justify-self:end; padding:8px 10px; border:1px solid var(--border); background:#1a1a1a; color:var(--text); border-radius:8px } */
+      /* Row 1: Logo (left), Translate (middle), Auth (right) */
+      #topbar-left > a[href="/"]{ grid-column:1; grid-row:1; display:flex !important; align-items:center; gap:6px; text-decoration:none; color:inherit; font-weight:700; min-width:0 }
+      #topbar-left > a[href="/"] img{ height:28px; width:auto; border-radius:6px }
+      #topbar-left > a[href="/"] span{ font-size:15px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
 
       /* authArea is a SIBLING of #topbar-left (already inside .topbar), so place it in row1 col3 */
       .topbar > #authArea{ grid-column:3; grid-row:1; display:flex; gap:8px; align-items:center; margin-left:0 !important; justify-self:end; }
 
       /* Row 2: Country (col1), Region (col2), Refresh (col3) */
-      #countrySelect{ grid-column:1; grid-row:2; min-width:0 }
-      #regionSelect{  grid-column:2; grid-row:2; min-width:0 }
-      #refreshBtn{    grid-column:3; grid-row:2; justify-self:end; display:inline-flex; align-items:center; gap:6px; padding:8px 10px; border:1px solid var(--border); background:#151515; border-radius:8px; color:var(--text) }
+      #countrySelect{ grid-column:1; grid-row:2; min-width:0; width:100%; max-width:100%; }
+      #regionSelect{  grid-column:2; grid-row:2; min-width:0; width:100%; max-width:100%; }
+      #refreshBtn{    grid-column:3; grid-row:2; justify-self:end; display:inline-flex; align-items:center; gap:6px; padding:8px 10px; border:1px solid var(--border); background:#151515; border-radius:8px; color:var(--text); min-width:0; }
       #refreshBtn .txt{ display:none } /* if you add .txt span, hide it on mobile */
 
       /* Row 3: Severity (col1-2), Dominant (col3) */
-      #severitySignalBar{ grid-column:1 / span 2; grid-row:3; align-self:center }
-      #dominantBadge{     grid-column:3; grid-row:3; justify-self:end; align-self:center }
+      #severitySignalBar{ grid-column:1 / span 2; grid-row:3; align-self:center; overflow:hidden; }
+      #dominantBadge{     grid-column:3; grid-row:3; justify-self:end; align-self:center; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+      /* Allow badges and other small tokens to break long strings (if any) */
+      .token-badge { overflow-wrap:anywhere; word-break:break-word; }
 
       /* Row 4: Show Map (full width) */
       #showMapBtn{ grid-column:1 / -1; grid-row:4; display:block; width:100% }
 
       /* Content: single column, map hidden until shown; news fills screen */
-      .layout{ display:block }
-      #map{ display:none; border:0; min-height:40vh }
-      .sidebar{ padding:0; margin:0 }
+      .layout{ display:block; width:100%; max-width:100%; box-sizing:border-box; }
+      #map{ display:none; border:0; min-height:40vh; width:100%; max-width:100%; box-sizing:border-box; }
+      .sidebar{ padding:0; margin:0; width:100%; box-sizing:border-box; }
       .section-title{ padding:10px; border-bottom:1px solid var(--border) }
-      #newsList{ padding:10px }
-      body{ overflow-x:hidden }
+      #newsList{ padding:10px; overflow-wrap:anywhere; word-break:break-word; }
+      body{ /* redundant safety, still mobile-only */ overflow-x:hidden }
     }
   </style>
 </head>
