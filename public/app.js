@@ -19,6 +19,7 @@
     s.textContent = css;
     document.head.appendChild(s);
   }
+  
   function ensureRoot(){
     let root = document.getElementById('toastRoot');
     if (!root){ root = document.createElement('div'); root.id = 'toastRoot'; document.body.appendChild(root); }
